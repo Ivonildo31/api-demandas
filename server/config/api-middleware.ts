@@ -1,4 +1,3 @@
-
 export const max = process.env.API_MAX || 300
 export const duration = process.env.API_DURATION_MIN || 10
 export const perSecond = process.env.API_PER_SECOND || false
