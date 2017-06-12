@@ -19,6 +19,6 @@ export class Demand extends Models.BaseModel implements IDemand {
     this.type = obj.type
     this.description = obj.description
     this.approved = obj.approved || false
-    this.payload = obj.payload
+    this.payload = obj.payload || ''
   }
 }

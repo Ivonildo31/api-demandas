@@ -2,35 +2,35 @@ import { IBaseModel } from '.'
 
 export interface IDemand extends IBaseModel {
 
-    /**
-     * 
-     * 
-     * @type {number}
-     * @memberOf IDemand
-     */
-    type: number
+  /**
+   * Typo da demanda
+   *
+   * @type {number}
+   * @memberOf IDemand
+   */
+  type: number
 
-    /**
-     * 
-     * 
-     * @type {string}
-     * @memberOf IDemand
-     */
-    description: string
+  /**
+   * Descrição da demanda
+   *
+   * @type {string}
+   * @memberOf IDemand
+   */
+  description: string
 
-    /**
-     * 
-     * 
-     * @type {boolean}
-     * @memberOf IDemand
-     */
-    approved: boolean
+  /**
+   * Indica se a demanda foi aprovada ou não
+   *
+   * @type {boolean}
+   * @memberOf IDemand
+   */
+  approved: boolean
 
-    /**
-     * 
-     * 
-     * @type {*}
-     * @memberOf IDemand
-     */
-    payload: any
+  /**
+   * Payload: Qualquer informação específica sobre a demanda
+   *
+   * @type {*}
+   * @memberOf IDemand
+   */
+  payload: any
 }

@@ -1,82 +1,105 @@
 import * as gulp from 'gulp'
 import * as ts from 'gulp-typescript'
-let clean = require('gulp-clean')
 import * as tslint from 'gulp-tslint'
-import * as path from 'path'
 import * as sourcemaps from 'gulp-sourcemaps'
 import * as mocha from 'gulp-mocha'
-let serverPath = 'server'
-let serverCompiled = ['**/*.js', '**/*.js.map', '**/*.d.ts'].map(el => serverPath + el)
-let istanbul = require('gulp-istanbul')
-let remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul')
+import * as batch from 'gulp-batch'
+import * as shell from 'gulp-shell'
+const clean = require( 'gulp-clean' )
+const istanbul = require( 'gulp-istanbul' )
+const remapIstanbul = require( 'remap-istanbul/lib/gulpRemapIstanbul' )
 
-let tsProject = ts.createProject('tsconfig.json')
-let serverTS = [serverPath + '/**/*.ts']
+const tsProject = ts.createProject( 'tsconfig.json' )
 
-let runTest = () => gulp.src([`${serverPath}/**/*.Spec.js`]) // take our transpiled test source
-  .pipe(mocha({ timeout: 64000 })) // runs tests
+const sourcePath = 'server'
+const destPath = 'build'
+const sourceStatic = [ `${sourcePath}/**/*`, `!${sourcePath}/**/*.ts` ]
+const sourceTS = [ `${sourcePath}/**/*.ts` ]
+const destJS = [ `${destPath}/**/*.js` ]
+const destTests = [ `${destPath}/**/*.spec.js` ]
 
-let tsCompile = () => gulp
-  .src(serverTS)
-  .pipe(sourcemaps.init({ loadMaps: true }))
-  .pipe(tsProject())
-  .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: path.join(__dirname, serverPath) }))
-  .pipe(gulp.dest(serverPath))
+const runTest = () => {
+  return gulp.src( destTests ) // take our transpiled test source
+    .pipe( mocha( { timeout: 64000 } ) ) // runs tests
+}
 
-gulp.task('default', ['ts'], function () {
-  return gulp.watch(`${serverPath}/**/*.ts`, ['ts-inc'])
-})
-
-gulp.task('ts-inc', function () {
-  return tsCompile()
-})
-
-gulp.task('tslint', () =>
-  gulp.src(serverTS)
-    .pipe(tslint.default({
-      configuration: 'tslint.json'
-    }))
-    .pipe(tslint.default.report())
-)
-
-gulp.task('ts', ['clean'], function () {
-  return tsCompile()
-})
-
-gulp.task('clean', function () {
+const tsCompile = () => {
   return gulp
-    .src(serverCompiled, { read: false })
-    .pipe(clean())
-})
+    .src( sourceTS ).pipe( sourcemaps.init( { loadMaps: true } ) )
+    .pipe( tsProject() )
+    .pipe( sourcemaps.write( '.', { includeContent: false, sourceRoot: sourcePath } ) )
+    .pipe( gulp.dest( destPath ) )
+}
 
-gulp.task('pre-test', ['ts', 'tslint'], () =>
-  gulp.src([`${serverPath}/**/**.js`, `!${serverPath}/**/*.Spec.js`])
-    .pipe(istanbul())
-    .pipe(istanbul.hookRequire()) // Force `require` to return covered files
-)
+gulp.task( 'default', [ 'build' ], shell.task( [ 'tsc -w -p .' ] ) )
 
-gulp.task('test', ['pre-test'], () => runTest()
-  .once('error', () => process.exit(1))
-  .once('end', () => process.exit())
-)
+gulp.task( 'clean', () => {
+  return gulp.src( destPath, { read: false } )
+    .pipe( clean() )
+} )
 
-gulp.task('test-coverage', ['pre-test'], function () {
+gulp.task( 'build', [ 'clean' ], () => {
+  return gulp.src( sourceStatic )
+    .pipe( gulp.dest( 'build' ) )
+} )
+
+gulp.task( 'ts', [ 'build' ], tsCompile )
+
+gulp.task( 'ts-inc', tsCompile )
+
+gulp.task( 'tslint', () => {
+  return gulp.src( sourceTS )
+    .pipe( tslint.default( {
+      configuration: 'tslint.json'
+    } ) )
+    .pipe( tslint.default.report() )
+} )
+
+gulp.task( 'pre-test', [ 'ts' ], () => {
+  return gulp.src( destJS.concat( [ `!${sourcePath}/**/*.Spec.js` ] ) )
+    .pipe( istanbul() )
+    .pipe( istanbul.hookRequire() ) // Force `require` to return covered files
+} )
+
+gulp.task( 'test', [ 'pre-test' ], () => {
   return runTest()
-    .once('error', () => process.exit(1))
-    .pipe(istanbul.writeReports({
-      reporters: ['json'] // this yields a basic non-sourcemapped coverage.json file
-    }))
-})
+    .once( 'error', ( err: any ) => {
+      console.error( err )
+      process.exit( 1 )
+    } )
+    .once( 'end', () => process.exit() )
+} )
 
-gulp.task('coverage', ['test-coverage'], () =>
-  gulp.src('./coverage/coverage-final.json')
-    .pipe(remapIstanbul({
+gulp.task( 'watch:test', () => {
+  return gulp.watch( destTests, batch(( events: any, cb: any ) => {
+    return gulp.src( destTests )
+      .pipe( mocha( { timeout: 64000 } ) )
+  } ) )
+} )
+
+gulp.task( 'watch:single-test', () => {
+  return gulp.watch( destTests, batch(( events: any, cb: any ) => {
+    return events.pipe( mocha( { timeout: 64000 } ) )
+  } ) )
+} )
+
+gulp.task( 'test-coverage', [ 'pre-test' ], () => {
+  return runTest()
+    .once( 'error', () => process.exit( 1 ) )
+    .pipe( istanbul.writeReports( {
+      reporters: [ 'json' ] // this yields a basic non-sourcemapped coverage.json file
+    } ) )
+} )
+
+gulp.task( 'coverage', [ 'test-coverage' ], () => {
+  return gulp.src( './coverage/coverage-final.json' )
+    .pipe( remapIstanbul( {
       basePath: '.',
       reports: {
         'html': './coverage',
         'text-summary': null,
         'lcovonly': './coverage/lcov.info'
       }
-    }))
-    .once('end', () => process.exit())
-)
+    } ) )
+    .once( 'end', () => process.exit() )
+} )
