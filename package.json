@@ -1,7 +1,7 @@
 {
   "name": "api-demandas",
   "scripts": {
-    "start": "node server/bin/www"
+    "start": "node build/bin/www"
   },
   "version": "0.0.1",
   "description": "API de demandas",
