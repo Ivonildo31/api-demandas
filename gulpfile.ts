@@ -1,6 +1,15 @@
+/// <reference path="node_modules/@types/node/index.d.ts" />
+/// <reference path="node_modules/@types/gulp/index.d.ts" />
+/// <reference path="node_modules/@types/gulp-typescript/index.d.ts" />
+// <reference path="node_modules/@types/gulp-tslint/index.d.ts" />
+/// <reference path="node_modules/@types/gulp-sourcemaps/index.d.ts" />
+/// <reference path="node_modules/@types/gulp-mocha/index.d.ts" />
+/// <reference path="node_modules/@types/gulp-batch/index.d.ts" />
+/// <reference path="node_modules/@types/gulp-shell/index.d.ts" />
+
 import * as gulp from 'gulp'
 import * as ts from 'gulp-typescript'
-import * as tslint from 'gulp-tslint'
+// import * as tslint from 'gulp-tslint'
 import * as sourcemaps from 'gulp-sourcemaps'
 import * as mocha from 'gulp-mocha'
 import * as batch from 'gulp-batch'
@@ -9,7 +18,7 @@ const clean = require( 'gulp-clean' )
 const istanbul = require( 'gulp-istanbul' )
 const remapIstanbul = require( 'remap-istanbul/lib/gulpRemapIstanbul' )
 
-const tsProject = ts.createProject( 'tsconfig.json' )
+const tsProject: any = ts.createProject( 'tsconfig.json' )
 
 const sourcePath = 'server'
 const destPath = 'build'
@@ -47,13 +56,13 @@ gulp.task( 'ts', [ 'build' ], tsCompile )
 
 gulp.task( 'ts-inc', tsCompile )
 
-gulp.task( 'tslint', () => {
-  return gulp.src( sourceTS )
-    .pipe( tslint.default( {
-      configuration: 'tslint.json'
-    } ) )
-    .pipe( tslint.default.report() )
-} )
+// gulp.task( 'tslint', () => {
+//   return gulp.src( sourceTS )
+//     .pipe( tslint.default( {
+//       configuration: 'tslint.json'
+//     } ) )
+//     .pipe( tslint.default.report() )
+// } )
 
 gulp.task( 'pre-test', [ 'ts' ], () => {
   return gulp.src( destJS.concat( [ `!${sourcePath}/**/*.Spec.js` ] ) )
