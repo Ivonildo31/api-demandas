@@ -121,6 +121,6 @@
     "tslint-config-standard": "^3.0.0",
     "tslint-eslint-rules": "^3.2.3",
     "tsviz": "^1.0.11",
-    "typescript": "^2.1.5"
+    "typescript": "^2.4.0"
   }
 }
