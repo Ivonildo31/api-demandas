@@ -15,10 +15,13 @@
         "noUnusedParameters" : false
     },
     "include": [
-        "server"
+        "server/**/*"
     ],
     "exclude": [
+        "build",
         "node_modules",
-        "jspm_packages"
+        "server/**/*.spec.ts",
+        "jspm_packages",
+        "rethinkdb_data"
     ]
 }
