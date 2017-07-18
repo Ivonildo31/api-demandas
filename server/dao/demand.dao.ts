@@ -56,7 +56,13 @@ export class DemandDAO extends BaseDAO<IDemand> {
     return demand
   }
 
-  public async paginatedQuery ( search: any = {}, user: Interfaces.IBaseUser, page?: number, limit?: number, order?: Array<string> | Array<Array<string>>, options?: any ): Promise<Interfaces.IResultSearch<T>> {
+  public async paginatedQuery (
+    search: any = {},
+    user: Interfaces.IBaseUser,
+    page?: number,
+    limit?: number,
+    order?: Array<string> | Array<Array<string>>,
+    options?: any ): Promise<Interfaces.IResultSearch<IDemand>> {
     let result = await super.paginatedQuery( search, user, page, limit, order, options )
     result.result.map(( r: IDemand ) => this.parsePayload( r ) )
     return result
