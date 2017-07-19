@@ -1,5 +1,7 @@
 var gulp = require( 'gulp' )
 var ts = require( 'gulp-typescript' )
+var fs = require( 'fs' )
+var moment = require( 'moment' )
 // var tslint from 'gulp-tslint'
 // var sourcemaps from 'gulp-sourcemaps'
 var mocha = require( 'gulp-mocha' )
@@ -103,3 +105,63 @@ gulp.task( 'test', [ 'pre-test' ], function () {
 //     } ) )
 //     .once( 'end', () => process.exit() )
 // } )
+
+gulp.task( 'feedback', function () {
+  let listDemands = []
+  fs.readFile( 'feedback.json', 'utf8', function ( err, data ) {
+    a = JSON.parse( data )
+    a = a.map( function ( value ) {
+      let payload = value.payload
+      return {
+        tipo: getTypeDemand( value.type ),
+        criadoEm: moment( value.createdAt ).format( 'DD/MM/YYYY HH:mm:ss' ),
+        hora: payload.date ? moment( value.createdAt.substring( 0, 11 ) + payload.date.substring( 11 ) ).format( 'HH:mm' ) : '',
+        linha: payload.line ? `${payload.line}` : '',
+        ponto: payload.stop ? `${payload.stop}` : '',
+        descricao: payload.text ? `${payload.text.replace( '\n', ' ' )}` : '',
+        usuario: payload.user ? `${getUser( payload.user )}` : ''
+      }
+    } )
+
+    let csvJson = ''
+    for ( var property in a[ 0 ] ) {
+      if ( a[ 0 ].hasOwnProperty( property ) ) {
+        csvJson += '' + property + ';'
+      }
+    }
+    csvJson += '\n'
+    csvJson += a.map( function ( value ) {
+      let row = ''
+      for ( var property in value ) {
+        if ( value.hasOwnProperty( property ) ) {
+          row += value[ property ] + ';'
+        }
+      }
+      return row + '\n'
+    } )
+
+    fs.writeFile( 'feedback.csv', csvJson, function ( err ) {
+      if ( err ) {
+        console.error( err )
+      }
+    } )
+  } )
+} )
+
+var getTypeDemand = function ( type ) {
+  switch ( type ) {
+    case 0: return 'Linha nao aparece'
+    case 1: return 'Localizacao errada'
+    case 2: return 'Erro no horario'
+    case 3: return 'Erro na previsao'
+    default: return 'Outro problema'
+  }
+}
+
+const getUser = function ( user ) {
+  if ( user.anonymous ) {
+    return 'usuario anonimo'
+  } else {
+    return `nome: ${user.nome} email: ${user.email}`
+  }
+}
