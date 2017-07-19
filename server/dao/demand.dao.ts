@@ -1,8 +1,19 @@
 import * as JSData from 'js-data'
+import * as mailConfig from '../config/mail-config'
+import * as moment from 'moment'
 import { BaseDAO } from '.'
 import { Demand } from '../models'
 import { IDemand } from '../interfaces'
 import { Config, Interfaces, Services } from 'js-data-dao'
+import { mailService } from '../services/mail'
+
+enum FeedBackType {
+  LinhaNaoAparece = 0,
+  LocalizacaoErrada = 1,
+  ErroNoHorario = 2,
+  ErroNaPrevisao = 3,
+  OutroProblema = 4
+}
 
 /**
  * classe de persistencia da fonte de informação
@@ -46,6 +57,11 @@ export class DemandDAO extends BaseDAO<IDemand> {
     obj = this.stringfyPayload( obj )
     let demand = await super.create( obj, userP, options )
     demand = this.parsePayload( demand )
+    try {
+      this.sendEmail( demand )
+    } catch ( err ) {
+      console.error( err )
+    }
     return demand
   }
 
@@ -66,6 +82,46 @@ export class DemandDAO extends BaseDAO<IDemand> {
     let result = await super.paginatedQuery( search, user, page, limit, order, options )
     result.result.map(( r: IDemand ) => this.parsePayload( r ) )
     return result
+  }
+
+  private sendEmail ( demand: IDemand ) {
+    mailService.send( mailConfig.defaultTo, 'Feedback Transcol Online', this.getEmailBody( demand ) )
+  }
+
+  private getEmailBody ( demand: IDemand ) {
+    let payload = demand.payload
+    let mailBody = `Data de envio: ${moment( demand.createdAt ).format( 'DD/MM/YYYY HH:mm:ss' )}\n`
+    mailBody += `tipo: ${this.getTypeDemand( payload.type )}\n`
+
+    // Ajusta a data do horário informado, pois no formulário ele preenche a data como 1/1/1970.
+    // TODO: Por enquanto utilizando a data de criação. Mas deve ser ajustado no formulário do aplicativo.
+    mailBody += payload.date ? `hora: ${moment( demand.createdAt.substring( 0, 11 ) + payload.date.substring( 11 ) ).format( 'HH:mm' )}\n` : ''
+
+    mailBody += payload.line ? `linha: ${payload.line}\n` : ''
+    mailBody += payload.stop ? `ponto: ${payload.stop}\n` : ''
+    mailBody += payload.text ? `descrição: ${payload.text}\n` : ''
+    mailBody += payload.user ? `usuário: ${this.getUser( payload.user )}\n` : ''
+    return mailBody
+  }
+
+  private getUser ( user: any ) {
+    if ( user.ananonymous ) {
+      return 'usuário anônimo'
+    } else {
+      return `
+        nome: ${user.nome}
+        email: ${user.email}`
+    }
+  }
+
+  private getTypeDemand ( type: number ) {
+    switch ( type ) {
+      case FeedBackType.LinhaNaoAparece: return 'Linha não aparece'
+      case FeedBackType.LocalizacaoErrada: return 'Localização errada'
+      case FeedBackType.ErroNoHorario: return 'Erro no horário'
+      case FeedBackType.ErroNaPrevisao: return 'Erro na previsão'
+      default: return 'Outro problema'
+    }
   }
 
   private parsePayload ( demand: IDemand ) {
