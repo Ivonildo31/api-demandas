@@ -15,14 +15,14 @@ let smtpOptions: any = {
   secure: mailConfig.secure,
   // ignoreTLS: true,
   // requireTLS: true,
-  tls: { rejectUnauthorized: mailConfig.rejectUnauthorized },
+/*   tls: { rejectUnauthorized: mailConfig.rejectUnauthorized }, */
   /**
    *  defines authentication data (see authentication section below)
    */
-  auth: {
+/*   auth: {
     user: mailConfig.username,
     pass: mailConfig.password
-  },
+  }, */
   /**
    * optional hostname of the client, used for identifying to the server
    */
