@@ -55,20 +55,20 @@ gulp.task( 'ts-inc', tsCompile )
 //     .pipe( tslint.default.report() )
 // } )
 
-// gulp.task( 'pre-test', [ 'ts' ], () => {
-//   return gulp.src( destJS.concat( [ `!${sourcePath}/**/*.Spec.js` ] ) )
-//     .pipe( istanbul() )
-//     .pipe( istanbul.hookRequire() ) // Force `require` to return covered files
-// } )
+gulp.task( 'pre-test', [ 'ts' ], function () {
+  return gulp.src( destJS.concat( [ `!${sourcePath}/**/*.Spec.js` ] ) )
+    .pipe( istanbul() )
+    .pipe( istanbul.hookRequire() ) // Force `require` to return covered files
+} )
 
-// gulp.task( 'test', [ 'pre-test' ], () => {
-//   return runTest()
-//     .once( 'error', ( err: any ) => {
-//       console.error( err )
-//       process.exit( 1 )
-//     } )
-//     .once( 'end', () => process.exit() )
-// } )
+gulp.task( 'test', [ 'pre-test' ], function () {
+  return runTest()
+    .once( 'error', ( err ) => {
+      console.error( err )
+      process.exit( 1 )
+    } )
+    .once( 'end', () => process.exit() )
+} )
 
 // gulp.task( 'watch:test', () => {
 //   return gulp.watch( destTests, batch(( events: any, cb: any ) => {
