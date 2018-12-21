@@ -3,8 +3,8 @@ API genérica para demandas
 
 # rotas  
 
--**GET: /**:  
--**GET: /:id**:  
--**POST: /**:  
--**POST: /query**:
+- **GET: /**:  
+- **GET: /:id**:  
+- **POST: /**:  
+- **POST: /query**:
 
